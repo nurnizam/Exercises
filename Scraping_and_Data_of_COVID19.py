@@ -15,23 +15,27 @@ A=[]
 B=[]
 C=[]
 D=[]
+E=[]
 
 for row in table.find_all('tr'):
     cells = row.find_all('td')
     A.append(cells[0].find(text=True))
     B.append(cells[1].find(text=True))
     C.append(cells[3].find(text=True))
-    D.append(cells[6].find(text=True))
+    D.append(cells[5].find(text=True))
+    E.append(cells[6].find(text=True))
+
 
 df=pd.DataFrame(A,columns=['Country, Other'])
 df['Total Cases']=B
 df['Total Deaths']=C
-df['Total Recovered'] =D
+df['Active Cases'] =D
+df['Total Recovered'] =E
 
 df.replace(',','', regex=True, inplace=True)
 df.replace(' ',0, inplace=True)
 df.loc[df['Country, Other'] == 0, 'Country, Other'] = ' Diamond Princess '
-df[['Total Cases','Total Deaths','Total Recovered']] = df[['Total Cases','Total Deaths','Total Recovered']].apply(pd.to_numeric)
+df[['Total Cases','Total Deaths','Active Cases','Total Recovered']] = df[['Total Cases','Total Deaths','Active Cases','Total Recovered']].apply(pd.to_numeric)
 
 fig = make_subplots(
     rows=2, cols=1,
@@ -47,7 +51,7 @@ fig.add_trace (go.Table(
                 align=['left','center'],
                 font_size=14,
    				height=30),
-    cells=dict(values=[df['Country, Other'], df['Total Cases'], df['Total Deaths'], df['Total Recovered']],
+    cells=dict(values=[df['Country, Other'], df['Total Cases'], df['Active Cases'], df['Total Deaths'], df['Total Recovered']],
                fill_color='white',
                line_color='black',
                align=['left','center'],
@@ -57,28 +61,28 @@ fig.add_trace (go.Table(
 
 fig.add_trace (go.Bar(
         x=df[1:11]["Country, Other"],
-        y=df[1:11]["Total Cases"],
-        name="Total Cases", text= df[1:11]["Total Cases"], textposition='auto'
-    ),
-    row=2, col=1)
-
-fig.add_trace (go.Bar(
-        x=df[1:11]["Country, Other"],
         y=df[1:11]["Total Deaths"],
-        name="Total Deaths", text= df[1:11]["Total Deaths"], textposition='outside'
+        name="Total Deaths", text= df[1:11]["Total Deaths"]
     ),
     row=2, col=1)
 
 fig.add_trace (go.Bar(
         x=df[1:11]["Country, Other"],
         y=df[1:11]["Total Recovered"],
-        name="Total Recovered", text= df[1:11]["Total Recovered"], textposition='outside'
+        name="Total Recovered", text= df[1:11]["Total Recovered"]
+    ),
+    row=2, col=1)
+
+fig.add_trace (go.Bar(
+        x=df[1:11]["Country, Other"],
+        y=df[1:11]["Active Cases"],
+        name="Active Cases", text= df[1:11]["Active Cases"]
     ),
     row=2, col=1)
 
 today = date.today()
 
-fig.update_layout(title_text="Countries/Clusters Affected by COVID-19 Cases as of " + today.strftime("%d %b %Y"))
+fig.update_layout(barmode = 'stack',title_text="Countries/Clusters Affected by COVID-19 Cases as of " + today.strftime("%d %b %Y"))
 fig.show()
 
 df.to_csv('Covid19Tally.csv', index=False)
